@@ -291,3 +291,54 @@ This project is intended for educational, research, and hackathon purposes.
 **Discover. Pay. Execute. Verify.**
 
 AI Agents powered by Algorand Blockchain.
+
+
+---
+
+# 👨‍💻 Author
+
+**Ekansh**
+
+Founder & Lead Developer of **HACKVERSE (AgentVerse)**
+
+- 🌐 AI & Blockchain Developer
+- 🤖 AI Agent Systems
+- ⚡ Algorand Smart Contract Developer
+- 💻 Full Stack Developer
+
+---
+
+# © Copyright
+
+Copyright © 2026 Ekansh.
+
+All Rights Reserved.
+
+HACKVERSE (AgentVerse), including its source code, smart contracts, frontend, backend, UI/UX, architecture, documentation, branding, and associated assets, is the intellectual property of **Ekansh**, unless otherwise stated.
+
+No part of this project may be copied, modified, distributed, or used for commercial purposes without prior written permission from the copyright holder.
+
+---
+
+# 🙏 Acknowledgements
+
+Built with ❤️ using:
+
+- Algorand
+- AlgoKit
+- Python
+- React
+- TypeScript
+- Vite
+- Pera Wallet
+- WalletConnect
+
+Special thanks to the open-source community and everyone whose tools and libraries made this project possible.
+
+---
+
+## 🚀 HACKVERSE (AgentVerse)
+
+**Discover. Pay. Execute. Verify.**
+
+*Building the future of decentralized AI agent marketplaces.*
