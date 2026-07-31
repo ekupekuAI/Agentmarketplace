@@ -1,0 +1,231 @@
+#pragma version 11
+#pragma typetrack false
+
+// algopy.arc4.ARC4Contract.approval_program() -> uint64:
+main:
+    intcblock 0 2 1
+    bytecblock "|" "agent:"
+    // smart_contracts/agent_verse/contract.py:5
+    // class AgentVerse(ARC4Contract, state_totals=StateTotals(global_bytes=32)):
+    txn NumAppArgs
+    bz main___algopy_default_create@12
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x70be056a 0xcef28f68 0x507730ab // method "register_agent(string,string,string,string,string,string)void", method "record_execution(string,string,string)void", method "get_agent(string)string"
+    txna ApplicationArgs 0
+    match register_agent record_execution get_agent
+    err
+
+main___algopy_default_create@12:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    !
+    &&
+    return
+
+
+// smart_contracts.agent_verse.contract.AgentVerse.register_agent[routing]() -> void:
+register_agent:
+    // smart_contracts/agent_verse/contract.py:12
+    // @abimethod()
+    txna ApplicationArgs 1
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_1 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    txna ApplicationArgs 2
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_1 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    txna ApplicationArgs 3
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_1 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    txna ApplicationArgs 4
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_1 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    txna ApplicationArgs 5
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_1 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    txna ApplicationArgs 6
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_1 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    // smart_contracts/agent_verse/contract.py:22
+    // assert Txn.sender == Global.creator_address
+    txn Sender
+    global CreatorAddress
+    ==
+    assert
+    // smart_contracts/agent_verse/contract.py:23-24
+    // # The app-call sender is the creator wallet; metadata is retrievable from state.
+    // self.agents[agent_id] = name + "|" + version + "|" + category + "|" + verified + "|" + metadata_uri
+    uncover 4
+    bytec_0 // "|"
+    concat
+    uncover 4
+    concat
+    bytec_0 // "|"
+    concat
+    uncover 3
+    concat
+    bytec_0 // "|"
+    concat
+    uncover 2
+    concat
+    bytec_0 // "|"
+    concat
+    swap
+    concat
+    bytec_1 // "agent:"
+    uncover 2
+    concat
+    swap
+    app_global_put
+    // smart_contracts/agent_verse/contract.py:12
+    // @abimethod()
+    intc_2 // 1
+    return
+
+
+// smart_contracts.agent_verse.contract.AgentVerse.record_execution[routing]() -> void:
+record_execution:
+    // smart_contracts/agent_verse/contract.py:26
+    // @abimethod()
+    txna ApplicationArgs 1
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_1 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    txna ApplicationArgs 2
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_1 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    txna ApplicationArgs 3
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_1 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    // smart_contracts/agent_verse/contract.py:28-29
+    // # Store only a compact reference. Results and prompts never go on-chain.
+    // self.executions[execution_id] = agent_id + "|" + result_hash
+    swap
+    bytec_0 // "|"
+    concat
+    swap
+    concat
+    pushbytes "execution:"
+    uncover 2
+    concat
+    swap
+    app_global_put
+    // smart_contracts/agent_verse/contract.py:26
+    // @abimethod()
+    intc_2 // 1
+    return
+
+
+// smart_contracts.agent_verse.contract.AgentVerse.get_agent[routing]() -> void:
+get_agent:
+    // smart_contracts/agent_verse/contract.py:31
+    // @abimethod(readonly=True)
+    txna ApplicationArgs 1
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_1 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    // smart_contracts/agent_verse/contract.py:33
+    // return self.agents[agent_id]
+    bytec_1 // "agent:"
+    swap
+    concat
+    intc_0 // 0
+    swap
+    app_global_get_ex
+    assert // check self.agents entry exists
+    // smart_contracts/agent_verse/contract.py:31
+    // @abimethod(readonly=True)
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
