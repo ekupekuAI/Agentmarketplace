@@ -1,11 +1,12 @@
 # Service boundaries
 
-The UI must call service interfaces, never a wallet SDK, smart-contract client, or AI vendor SDK directly. Phase 2 runs use a deterministic local adapter and persist only in browser-local storage.
+The UI calls service interfaces, not vendor SDKs directly.
 
-- `ai/` holds the provider-neutral agent-execution contract and local Demo AI adapter.
-- `execution/` orchestrates runs, progress logs, timeouts, and browser-local history.
-- `analytics/` derives user-facing metrics from execution history.
-- `payments/` holds the future price-quote contract.
-- `blockchain/` holds the future Algorand payment-submission contract.
+- `ai/` holds provider-neutral execution contracts and the browser fallback adapter.
+- `execution/` orchestrates local run lifecycle, progress logs, and history.
+- `analytics/` derives metrics from real execution history.
+- `payments/` owns the x402 client flow.
+- `blockchain/` records compact AgentVerse TestNet execution receipts.
+- `workspace/` owns local profile, settings, creator listings, and import/export.
 
-The included implementations deliberately throw until the corresponding server-side and Algorand integrations are introduced in later phases.
+Gemini and Python production execution live in `server/` so secrets stay out of the frontend bundle.

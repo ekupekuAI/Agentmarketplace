@@ -50,6 +50,12 @@ export async function recordExecutionOnChain(args: {
 }): Promise<ExecutionChainReceipt> {
   const appId = getAgentVerseAppId()
   const algod = createAlgodClient()
+  // The deployed contract prefixes this key with `execution:` and stores the
+  // agent id plus a 64-character result hash as its value. A UUID-based local
+  // run id pushes the combined global-state entry beyond Algorand's 128-byte
+  // key/value limit. Keep the full UUID locally and use this 24-hex receipt id
+  // only for the immutable on-chain index.
+  const onChainExecutionId = (await hashExecutionSummary(args.executionId)).slice(0, 24)
   const suggestedParams = await algod.getTransactionParams().do()
   const composer = new AtomicTransactionComposer()
 
@@ -58,7 +64,7 @@ export async function recordExecutionOnChain(args: {
     sender: args.sender,
     signer: args.signer,
     method: recordExecutionMethod,
-    methodArgs: [args.executionId, args.agentId, args.resultHash],
+    methodArgs: [onChainExecutionId, args.agentId, args.resultHash],
     suggestedParams,
     onComplete: OnApplicationComplete.NoOpOC,
   })

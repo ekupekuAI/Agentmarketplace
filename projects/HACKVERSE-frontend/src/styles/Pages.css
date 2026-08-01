@@ -6,6 +6,21 @@
   padding: 58px 0 100px;
 }
 
+.execution-upload {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  color: #bdb5dc;
+  font-size: 10px;
+}
+
+.execution-upload input[type='file'] {
+  max-width: 100%;
+  color: #a9a2ba;
+  font: inherit;
+}
+
 .creator-hero-panel {
   max-width: 760px;
   margin-bottom: 30px;

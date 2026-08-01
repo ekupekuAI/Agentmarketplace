@@ -1,11 +1,11 @@
-import { DemoAiProvider } from './demoAiProvider'
+import { BrowserFallbackProvider } from './browserFallbackProvider'
 import type { AiProvider, AiProviderId } from './types'
 
-const providers: Record<AiProviderId, AiProvider | undefined> = { demo: new DemoAiProvider(), openai: undefined, openrouter: undefined, anthropic: undefined, gemini: undefined }
+const providers: Record<AiProviderId, AiProvider | undefined> = { gemini: undefined, openrouter: undefined, python: new BrowserFallbackProvider() }
 
-export function getAiProvider(providerId: AiProviderId = 'demo'): AiProvider {
+export function getAiProvider(providerId: AiProviderId = 'python'): AiProvider {
   const provider = providers[providerId]
-  if (!provider) throw new Error(`${providerId} is not configured. Choose Demo AI or install a server-side adapter.`)
+  if (!provider) throw new Error(`${providerId} is not configured. Use the x402 backend for paid Gemini execution.`)
   return provider
 }
 

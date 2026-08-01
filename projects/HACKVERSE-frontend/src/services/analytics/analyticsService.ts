@@ -25,6 +25,6 @@ export function getExecutionAnalytics(): ExecutionAnalytics {
     mostUsedAgent: getAllAgents().find((agent) => agent.id === topAgentId)?.name ?? 'No runs yet',
     averageRuntime: averageRuntime ? `${averageRuntime}s` : '—',
     successRate: history.length ? `${Math.round((completed.length / history.length) * 100)}%` : '—',
-    satisfaction: history.length ? '4.8/5' : 'No ratings yet',
+    satisfaction: history.length ? 'Not collected' : 'No ratings yet',
   }
 }

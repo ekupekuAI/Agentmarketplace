@@ -7,7 +7,7 @@ const wait = (milliseconds: number) => new Promise<void>((resolve) => window.set
 const createId = () => `run_${crypto.randomUUID?.() ?? `${Date.now()}_${Math.random().toString(36).slice(2)}`}`
 const withTimeout = <T,>(operation: Promise<T>, timeoutMs: number) => Promise.race<T>([operation, new Promise<T>((_, reject) => window.setTimeout(() => reject(new Error('The agent took too long to respond. Please retry your run.')), timeoutMs))])
 
-export async function executeAgent({ agentId, input, providerId = 'demo', onProgress }: ExecuteOptions): Promise<ExecutionRecord> {
+export async function executeAgent({ agentId, input, providerId = 'python', onProgress }: ExecuteOptions): Promise<ExecutionRecord> {
   const startedAt = new Date()
   const logs: ExecutionLog[] = []
   const addLog = (message: string) => { const log = { at: new Date().toISOString(), message }; logs.push(log); onProgress?.(log) }

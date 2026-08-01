@@ -6,9 +6,46 @@ export function AgentDetailsPage({ agentId }: { agentId: string }) {
   const agent = getAgentById(agentId)
   if (!agent || agent.status === 'archived') return <NotFoundState />
   const related = getPublishedAgents().filter((item) => item.id !== agent.id && (item.category === agent.category || item.tags?.some((tag) => agent.tags?.includes(tag)))).slice(0, 3)
-  const versions = agent.versions?.length ? agent.versions : [{ version: '1.0.0', date: agent.createdAt, notes: 'Initial marketplace release' }]
-  const samples = agent.sampleInputs?.length ? agent.sampleInputs : ['Paste a focused request with enough context for the agent to produce a useful result.']
-  const tags = agent.tags?.length ? agent.tags : [agent.category, agent.creator]
+  const versions = agent.versions?.length ? agent.versions : [{ version: '1.0.0', date: agent.createdAt, notes: 'Initial marketplace metadata release' }]
+  const samples = agent.sampleInputs?.length ? agent.sampleInputs : ['Paste focused task context with enough detail for the selected runtime to respond well.']
+  const tags = agent.tags?.length ? agent.tags : [agent.category, agent.runtime ?? 'Gemini']
 
-  return <section className="agent-details-page"><div className="details-breadcrumb"><Link to="/marketplace">Marketplace</Link><span> / </span><span>{agent.name}</span></div><div className="agent-details-hero">{agent.iconDataUrl ? <img className="detail-icon detail-image" src={agent.iconDataUrl} alt=""/> : <div className={'detail-icon ' + agent.accent}>{agent.initials}</div>}<div><div className="card-title-row"><p className="eyebrow">{agent.category} AGENT</p>{agent.verified && <span className="verified">✓ Verified creator</span>}</div><h1>{agent.name}</h1><p>{agent.tagline}</p><div className="tag-row">{tags.map((tag) => <span key={tag}>{tag}</span>)}</div></div><div className="detail-action"><span>{agent.price}<small> / run</small></span><Link className="button" to={`/agents/${agent.id}/execute`}>Run this agent <span>→</span></Link></div></div><div className="agent-details-content details-expanded"><article><h2>Metadata</h2><p>{agent.description}</p><div className="metadata-grid"><span><b>Creator</b>{agent.creator}</span><span><b>Status</b>{agent.status ?? 'published'}</span><span><b>Version</b>{versions[0].version}</span><span><b>Metadata</b>{agent.metadataUri || 'Local metadata'}</span></div><div className="trust-stats"><span><b>★ {agent.rating || 'New'}</b>{agent.reviews} reviews</span><span><b>{agent.usageCount}</b> total runs</span><span><b>{agent.verified ? 'Verified' : 'Local'}</b> trust status</span></div></article><aside><p className="eyebrow">VERSION HISTORY</p>{versions.map((item) => <div className="version-item" key={`${item.version}-${item.date}`}><b>{item.version}</b><small>{new Date(item.date).toLocaleDateString()}</small><p>{item.notes}</p></div>)}</aside><article><h2>Sample inputs</h2><div className="sample-list">{samples.map((sample) => <blockquote key={sample}>{sample}</blockquote>)}</div></article><aside><p className="eyebrow">CHANGELOG</p><ul className="compact-list">{(agent.changelog?.length ? agent.changelog : ['No published changelog entries yet.']).map((item) => <li key={item}>{item}</li>)}</ul></aside></div>{related.length > 0 && <section className="related-agents"><div className="section-heading"><div><p className="eyebrow">RELATED</p><h2>More agents to try</h2></div></div><div className="creator-agent-list">{related.map((item) => <article key={item.id}><span className={'agent-icon ' + item.accent}>{item.initials}</span><div><b>{item.name}</b><small>{item.category} · {item.price}</small></div><Link to={`/agents/${item.id}`}>View</Link></article>)}</div></section>}</section>
+  return (
+    <section className="agent-details-page">
+      <div className="details-breadcrumb"><Link to="/marketplace">Marketplace</Link><span> / </span><span>{agent.name}</span></div>
+      <div className="agent-details-hero">
+        {agent.iconDataUrl ? <img className="detail-icon detail-image" src={agent.iconDataUrl} alt="" /> : <div className={'detail-icon ' + agent.accent}>{agent.initials}</div>}
+        <div>
+          <div className="card-title-row"><p className="eyebrow">{agent.category} AGENT</p>{agent.verified && <span className="verified">✓</span>}</div>
+          <h1>{agent.name}</h1>
+          <p>{agent.tagline}</p>
+          <div className="tag-row">{tags.map((tag) => <span key={tag}>{tag}</span>)}</div>
+        </div>
+        <div className="detail-action"><span>{agent.price}<small> / run</small></span><Link className="button" to={`/agents/${agent.id}/execute`}>Run this agent <span>→</span></Link></div>
+      </div>
+      <div className="agent-details-content details-expanded">
+        <article>
+          <h2>Metadata</h2>
+          <p>{agent.description}</p>
+          <div className="metadata-grid">
+            <span><b>Creator</b>{agent.creator}</span>
+            <span><b>Runtime</b>{agent.runtime ?? 'Gemini'}</span>
+            <span><b>Endpoint</b>{agent.endpoint ?? `/api/agents/${agent.id}/execute`}</span>
+            <span><b>Metadata hash</b>{agent.metadataHash ?? agent.metadataUri ?? 'Generated from listing metadata'}</span>
+            <span><b>Owner</b>{agent.listingOwner ?? agent.creator}</span>
+            <span><b>Creator wallet</b>{agent.creatorWallet ?? 'Connected at publish time'}</span>
+          </div>
+          <div className="trust-stats">
+            <span><b>{agent.rating ? `★ ${agent.rating}` : 'New'}</b>{agent.reviews} completed reviews</span>
+            <span><b>{agent.usageCount}</b> paid runs</span>
+            <span><b>{agent.verified ? 'Verified' : 'Local'}</b> trust status</span>
+          </div>
+        </article>
+        <aside><p className="eyebrow">VERSION HISTORY</p>{versions.map((item) => <div className="version-item" key={`${item.version}-${item.date}`}><b>{item.version}</b><small>{new Date(item.date).toLocaleDateString()}</small><p>{item.notes}</p></div>)}</aside>
+        <article><h2>Sample inputs</h2><div className="sample-list">{samples.map((sample) => <blockquote key={sample}>{sample}</blockquote>)}</div></article>
+        <aside><p className="eyebrow">CHANGELOG</p><ul className="compact-list">{(agent.changelog?.length ? agent.changelog : ['Metadata listing is live and ready for paid execution.']).map((item) => <li key={item}>{item}</li>)}</ul></aside>
+      </div>
+      {related.length > 0 && <section className="related-agents"><div className="section-heading"><div><p className="eyebrow">RELATED</p><h2>More agents to try</h2></div></div><div className="creator-agent-list">{related.map((item) => <article key={item.id}><span className={'agent-icon ' + item.accent}>{item.initials}</span><div><b>{item.name}</b><small>{item.category} · {item.price}</small></div><Link to={`/agents/${item.id}`}>View</Link></article>)}</div></section>}
+    </section>
+  )
 }

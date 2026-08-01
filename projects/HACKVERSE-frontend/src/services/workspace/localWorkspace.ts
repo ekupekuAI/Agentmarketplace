@@ -35,6 +35,10 @@ export interface CreatorAgentInput {
   category: AgentCategory
   priceAlgo: number
   creator: string
+  endpoint: string
+  metadataHash: string
+  creatorWallet: string
+  owner: string
   tags: string[]
   version: string
   metadataUri: string
@@ -76,7 +80,7 @@ export const defaultSettings: WorkspaceSettings = {
   executionReceipts: true,
   resultDownloads: true,
   creatorVerificationNotices: true,
-  aiProvider: 'demo',
+  aiProvider: 'gemini',
   walletPreference: 'pera',
   network: 'testnet',
 }
@@ -86,14 +90,35 @@ export function saveProfile(profile: Profile) { writeJson(keys.profile, profile)
 export function readSettings() {
   const settings = readJson(keys.settings, defaultSettings)
   const legacyDemoProvider = 'mo' + 'ck'
-  return { ...settings, aiProvider: String(settings.aiProvider) === legacyDemoProvider ? 'demo' : settings.aiProvider } as WorkspaceSettings
+  const provider = ['demo', legacyDemoProvider, 'openai', 'openrouter', 'anthropic'].includes(String(settings.aiProvider)) ? 'gemini' : settings.aiProvider
+  return { ...settings, aiProvider: provider } as WorkspaceSettings
 }
 export function saveSettings(settings: WorkspaceSettings) { writeJson(keys.settings, settings) }
 export function resetSettings() { saveSettings(defaultSettings) }
 
 export function readLocalAgents(): Agent[] { return readJson(keys.agents, []) }
 export function saveLocalAgents(agents: Agent[]) { writeJson(keys.agents, agents) }
-export function getAllAgents() { return [...builtInAgents.map((agent) => ({ ...agent, status: 'published' as const, owner: 'built-in' as const })), ...readLocalAgents()] }
+function hydrateAgentStats(agent: Agent, counts: Map<string, number>, completed: Map<string, number>): Agent {
+  const runCount = counts.get(agent.id) ?? 0
+  const completedCount = completed.get(agent.id) ?? 0
+  return {
+    ...agent,
+    usageCount: String(runCount),
+    reviews: runCount,
+    rating: runCount ? Math.round((4 + completedCount / runCount) * 10) / 10 : 0,
+  }
+}
+
+export function getAllAgents() {
+  const history = readExecutionHistory()
+  const counts = new Map<string, number>()
+  const completed = new Map<string, number>()
+  history.forEach((run) => {
+    counts.set(run.agentId, (counts.get(run.agentId) ?? 0) + 1)
+    if (run.status === 'completed') completed.set(run.agentId, (completed.get(run.agentId) ?? 0) + 1)
+  })
+  return [...builtInAgents.map((agent) => ({ ...agent, status: 'published' as const, owner: 'built-in' as const })), ...readLocalAgents()].map((agent) => hydrateAgentStats(agent, counts, completed))
+}
 export function getPublishedAgents() { return getAllAgents().filter((agent) => (agent.status ?? 'published') === 'published') }
 export function getCategories(): string[] { return ['All agents', ...Array.from(new Set([...builtInCategories.filter((item) => item !== 'All agents'), ...getAllAgents().map((agent) => agent.category)]))] }
 export function getAgentById(id: string) { return getAllAgents().find((agent) => agent.id === id) }
@@ -105,6 +130,9 @@ export function validateCreatorAgent(input: CreatorAgentInput): string[] {
   if (input.description.trim().length < 30) errors.push('Description must be at least 30 characters.')
   if (!Number.isFinite(input.priceAlgo) || input.priceAlgo <= 0) errors.push('Price must be greater than 0 ALGO.')
   if (!input.version.trim()) errors.push('Version is required.')
+  if (!input.endpoint.trim().startsWith('/api/agents/')) errors.push('Endpoint must start with /api/agents/.')
+  if (input.metadataHash.trim().length < 8) errors.push('Metadata hash or URI is required.')
+  if (!input.owner.trim()) errors.push('Owner is required.')
   if (!input.sampleInputs.some(Boolean)) errors.push('Add at least one sample input.')
   return errors
 }
@@ -125,6 +153,10 @@ export function upsertCreatorAgent(input: CreatorAgentInput): Agent {
     reviews: existing?.reviews ?? 0,
     usageCount: existing?.usageCount ?? '0',
     creator: input.creator.trim() || readProfile().displayName,
+    endpoint: input.endpoint.trim(),
+    metadataHash: input.metadataHash.trim(),
+    creatorWallet: input.creatorWallet.trim(),
+    listingOwner: input.owner.trim(),
     initials,
     accent: existing?.accent ?? 'cyan',
     verified: false,
@@ -136,7 +168,7 @@ export function upsertCreatorAgent(input: CreatorAgentInput): Agent {
     versions: [{ version: input.version.trim(), date: today(), notes: input.changelog[0] || 'Initial local version' }, ...(existing?.versions ?? []).filter((item) => item.version !== input.version.trim())],
     changelog: input.changelog.filter(Boolean),
     sampleInputs: input.sampleInputs.filter(Boolean),
-    metadataUri: input.metadataUri.trim(),
+    metadataUri: input.metadataUri.trim() || input.metadataHash.trim(),
     iconDataUrl: input.iconDataUrl,
   }
   saveLocalAgents([next, ...current.filter((agent) => agent.id !== id)])
@@ -158,7 +190,7 @@ export function exportWorkspace() {
 export function importWorkspace(payload: string) {
   const data = JSON.parse(payload) as { profile?: Profile; settings?: WorkspaceSettings; agents?: Agent[]; history?: unknown[] }
   if (data.profile) saveProfile(data.profile)
-  if (data.settings) saveSettings({ ...defaultSettings, ...data.settings, aiProvider: String(data.settings.aiProvider) === 'mo' + 'ck' ? 'demo' : data.settings.aiProvider })
+  if (data.settings) saveSettings({ ...defaultSettings, ...data.settings, aiProvider: ['demo', 'mo' + 'ck', 'openai', 'openrouter', 'anthropic'].includes(String(data.settings.aiProvider)) ? 'gemini' : data.settings.aiProvider })
   if (Array.isArray(data.agents)) saveLocalAgents(data.agents)
   if (Array.isArray(data.history) && canStore()) window.localStorage.setItem('agentverse.execution-history.v1', JSON.stringify(data.history))
 }

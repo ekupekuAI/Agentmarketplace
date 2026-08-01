@@ -27,5 +27,10 @@ export interface Agent {
   metadataUri?: string
   iconDataUrl?: string
   owner?: 'built-in' | 'local'
+  runtime?: 'Gemini' | 'Python Agent'
+  endpoint?: string
+  metadataHash?: string
+  creatorWallet?: string
+  listingOwner?: string
   updatedAt?: string
 }
