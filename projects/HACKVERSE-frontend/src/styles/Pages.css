@@ -615,3 +615,15 @@
 .theme-contrast .app-shell { background: #000; }
 .theme-contrast :is(p, small, time, label, dd, dt, em, .eyebrow, .card-meta span) { color: #fff !important; }
 .theme-contrast :is(.agent-card, .execution-form, .execution-timeline, .result-panel, .settings-panel, .creator-panel, .profile-panel, .history-table, .search-box, textarea, input, select) { background: #000 !important; border-color: #fff !important; }
+
+/* Dashboard trend chart: bars had no sized container, so every bar rendered at the minimum height. */
+.chart-grid { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 8px; align-items: end; height: 200px; margin: 18px 0 14px; }
+.chart-grid article { height: 100%; display: flex; flex-direction: column; justify-content: flex-end; gap: 6px; min-width: 0; }
+.chart-grid .bar { width: 100%; max-height: calc(100% - 22px); border-radius: 6px 6px 2px 2px; background: linear-gradient(180deg, #c3b8ff, #8f7df5); }
+.chart-grid small { color: #9994a6; font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Header wallet status: keep the pills on one line; the hint text was unstyled and overflowed the header. */
+.site-header .wallet-meta { display: flex; align-items: center; gap: 6px; }
+.wallet-hint { display: none; }
+@media (max-width: 850px) { .site-header .wallet-app { display: none; } }
+@media (max-width: 620px) { .site-header .wallet-meta { display: none; } .site-header .wallet-control { flex-wrap: nowrap; } }

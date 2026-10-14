@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 320" width="1200" height="320" role="img" aria-labelledby="title desc">
+  <title id="title">AgentVerse</title>
+  <desc id="desc">AgentVerse: discover, pay for and run AI agents with x402 payments and on-chain receipts on Algorand.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#10101a"/>
+      <stop offset="55%" stop-color="#1b1830"/>
+      <stop offset="100%" stop-color="#10101a"/>
+    </linearGradient>
+    <linearGradient id="shift" x1="0" y1="0" x2="1" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#c8bcff"/>
+      <stop offset="50%" stop-color="#8f7df5"/>
+      <stop offset="100%" stop-color="#a9f0ff"/>
+      <animateTransform attributeName="gradientTransform" type="translate" values="-400 0; 400 0; -400 0" dur="9s" repeatCount="indefinite"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#8f7df5" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#8f7df5" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="core" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ddc9ff"/>
+      <stop offset="55%" stop-color="#8374e2"/>
+      <stop offset="100%" stop-color="#4d4a99"/>
+    </linearGradient>
+    <filter id="soft" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="6"/>
+    </filter>
+  </defs>
+
+  <style>
+    .title { font: 800 76px 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; letter-spacing: -3px; }
+    .tag { font: 500 22px 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; fill: #bab8c7; }
+    .mono { font: 600 13px 'Cascadia Code', Consolas, 'SFMono-Regular', monospace; letter-spacing: 3px; fill: #aa9af3; }
+    .rise { opacity: 0; animation: rise 1s cubic-bezier(.2,.7,.2,1) forwards; }
+    .d1 { animation-delay: .1s } .d2 { animation-delay: .35s } .d3 { animation-delay: .6s } .d4 { animation-delay: .85s }
+    .orbit { transform-origin: 960px 160px; animation: spin 40s linear infinite; }
+    .orbit2 { transform-origin: 960px 160px; animation: spin 28s linear infinite reverse; }
+    .pulse { transform-origin: 960px 160px; animation: pulse 4.5s ease-in-out infinite; }
+    .twinkle { animation: twinkle 3s ease-in-out infinite; }
+    @keyframes rise { from { opacity: 0; transform: translateY(14px) } to { opacity: 1; transform: none } }
+    @keyframes spin { to { transform: rotate(360deg) } }
+    @keyframes pulse { 0%, 100% { opacity: .55; transform: scale(1) } 50% { opacity: .9; transform: scale(1.08) } }
+    @keyframes twinkle { 0%, 100% { opacity: .25 } 50% { opacity: 1 } }
+    @media (prefers-reduced-motion: reduce) {
+      .rise, .orbit, .orbit2, .pulse, .twinkle { animation: none !important; opacity: 1 !important; transform: none !important; }
+    }
+  </style>
+
+  <rect width="1200" height="320" rx="22" fill="url(#bg)"/>
+  <rect x="0.5" y="0.5" width="1199" height="319" rx="21.5" fill="none" stroke="#ffffff" stroke-opacity="0.08"/>
+
+  <!-- starfield -->
+  <g fill="#e4dcff">
+    <circle class="twinkle" cx="640" cy="52" r="1.6"/>
+    <circle class="twinkle" cx="700" cy="270" r="1.4" style="animation-delay:1s"/>
+    <circle class="twinkle" cx="1150" cy="44" r="1.8" style="animation-delay:.5s"/>
+    <circle class="twinkle" cx="1110" cy="286" r="1.3" style="animation-delay:1.6s"/>
+    <circle class="twinkle" cx="780" cy="120" r="1.2" style="animation-delay:2.2s"/>
+  </g>
+
+  <!-- orbit emblem (mirrors the app's hero art) -->
+  <circle class="pulse" cx="960" cy="160" r="130" fill="url(#glow)"/>
+  <g class="orbit">
+    <ellipse cx="960" cy="160" rx="190" ry="96" fill="none" stroke="#bfaeff" stroke-opacity="0.35" transform="rotate(-22 960 160)"/>
+    <circle cx="1128" cy="104" r="6" fill="#a9f0ff"/>
+    <circle cx="1128" cy="104" r="12" fill="#a9f0ff" opacity="0.35" filter="url(#soft)"/>
+  </g>
+  <g class="orbit2">
+    <ellipse cx="960" cy="160" rx="140" ry="70" fill="none" stroke="#abe4ff" stroke-opacity="0.3" transform="rotate(50 960 160)"/>
+    <circle cx="872" cy="240" r="5" fill="#e4adff"/>
+    <circle cx="872" cy="240" r="11" fill="#e4adff" opacity="0.35" filter="url(#soft)"/>
+  </g>
+  <g transform="rotate(10 960 160)">
+    <rect x="905" y="105" width="110" height="110" rx="32" fill="url(#core)"/>
+    <path d="M960 132 L967 153 L988 160 L967 167 L960 188 L953 167 L932 160 L953 153 Z" fill="#211d48"/>
+  </g>
+
+  <!-- copy -->
+  <text class="mono rise d1" x="72" y="92">THE AI AGENT MARKETPLACE · ALGORAND</text>
+  <text class="title rise d2" x="68" y="178"><tspan fill="#f7f7fb">agent</tspan><tspan fill="url(#shift)">verse</tspan></text>
+  <text class="tag rise d3" x="72" y="226">Discover, pay per run and execute AI agents —</text>
+  <text class="tag rise d4" x="72" y="258">with x402 payments and on-chain receipts.</text>
+</svg>
