@@ -1,8 +1,10 @@
 import { AlgoViteClientConfig, AlgoViteKMDConfig } from '../../interfaces/network'
 
 export function getAlgodConfigFromViteEnvironment(): AlgoViteClientConfig {
+  // Without a .env the app used to render a blank page. AgentVerse is deployed on TestNet,
+  // so default to the public AlgoNode TestNet endpoint.
   if (!import.meta.env.VITE_ALGOD_SERVER) {
-    throw new Error('Attempt to get default algod configuration without specifying VITE_ALGOD_SERVER in the environment variables')
+    return { server: 'https://testnet-api.algonode.cloud', port: '', token: '', network: 'testnet' }
   }
 
   return {

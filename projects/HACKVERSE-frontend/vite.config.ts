@@ -4,7 +4,7 @@ import { nodePolyfills } from 'vite-plugin-node-polyfills'
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  server: { proxy: { '/api': 'http://localhost:4021' } },
+  server: { proxy: { '/api': process.env.API_PROXY_TARGET ?? 'http://localhost:4021' } },
   plugins: [
     react(),
     nodePolyfills({

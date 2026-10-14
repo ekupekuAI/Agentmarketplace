@@ -1,4 +1,6 @@
-import 'dotenv/config'
+import { config as loadEnv } from 'dotenv'
+
+loadEnv({ path: ['.env.server', '.env'], quiet: true })
 
 const indexer = process.env.INDEXER_SERVER ?? 'https://testnet-idx.algonode.cloud'
 const assetId = Number(process.env.X402_ASSET_ID ?? 10458941)

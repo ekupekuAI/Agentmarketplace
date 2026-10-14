@@ -1,4 +1,5 @@
 import type { Agent } from '../types/agent'
+import { readSettings } from '../services/workspace/localWorkspace'
 import { Link } from './Link'
 
 export function AgentCard({ agent }: { agent: Agent }) {
@@ -8,7 +9,7 @@ export function AgentCard({ agent }: { agent: Agent }) {
       <div className="agent-card-main">
         <div className="card-title-row">
           <span className="eyebrow">{agent.category}</span>
-          {agent.verified ? <span className="verified" title="Verified creator">✓</span> : agent.owner === 'local' && <span className="verified" title="Local creator">local</span>}
+          {!readSettings().creatorVerificationNotices ? null : agent.verified ? <span className="verified" title="Verified creator">✓</span> : agent.owner === 'local' && <span className="verified" title="Local creator">local</span>}
         </div>
         <h3>{agent.name}</h3>
         <p>{agent.description}</p>

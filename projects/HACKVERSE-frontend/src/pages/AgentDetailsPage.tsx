@@ -1,6 +1,6 @@
 import { Link } from '../components/Link'
 import { NotFoundState } from '../components/feedback/NotFoundState'
-import { getAgentById, getPublishedAgents } from '../services/workspace/localWorkspace'
+import { getAgentById, getPublishedAgents, readSettings } from '../services/workspace/localWorkspace'
 
 export function AgentDetailsPage({ agentId }: { agentId: string }) {
   const agent = getAgentById(agentId)
@@ -16,7 +16,7 @@ export function AgentDetailsPage({ agentId }: { agentId: string }) {
       <div className="agent-details-hero">
         {agent.iconDataUrl ? <img className="detail-icon detail-image" src={agent.iconDataUrl} alt="" /> : <div className={'detail-icon ' + agent.accent}>{agent.initials}</div>}
         <div>
-          <div className="card-title-row"><p className="eyebrow">{agent.category} AGENT</p>{agent.verified && <span className="verified">✓</span>}</div>
+          <div className="card-title-row"><p className="eyebrow">{agent.category} AGENT</p>{agent.verified && readSettings().creatorVerificationNotices && <span className="verified">✓</span>}</div>
           <h1>{agent.name}</h1>
           <p>{agent.tagline}</p>
           <div className="tag-row">{tags.map((tag) => <span key={tag}>{tag}</span>)}</div>

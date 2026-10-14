@@ -1,4 +1,4 @@
-import 'dotenv/config'
+import { config as loadEnv } from 'dotenv'
 import express from 'express'
 import { spawn } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
@@ -15,18 +15,26 @@ type AgentConfig = { id: string; runtime: AgentRuntime; price: string; minLength
 type X402SettlementFailure = { errorReason?: string; errorMessage?: string; transaction?: string; network?: string; payer?: string; amount?: string }
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
+loadEnv({ path: [join(__dirname, '..', '.env.server'), join(__dirname, '..', '.env')], quiet: true })
 const payTo = process.env.X402_PAY_TO_ADDRESS
 const facilitatorUrl = process.env.X402_FACILITATOR_URL ?? 'https://facilitator.goplausible.xyz'
 const geminiApiKey = process.env.GEMINI_API_KEY
-const geminiModel = process.env.GEMINI_MODEL ?? 'gemini-2.0-flash'
+const geminiModel = process.env.GEMINI_MODEL || 'gemini-2.5-flash'
 const openRouterApiKey = process.env.OPENROUTER_API_KEY
 const openRouterModel = process.env.OPENROUTER_MODEL ?? 'openrouter/free'
 const webOrigin = process.env.WEB_ORIGIN
 const port = Number(process.env.PORT ?? 4021)
 const ALGORAND_TESTNET_X402_NETWORK = 'algorand:SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI='
-const log = (_entry: unknown) => undefined
+const log = (entry: { level?: string; [key: string]: unknown }) => {
+  if (entry.level === 'info' && String(entry.event).startsWith('http_')) return
+  const write = entry.level === 'info' ? console.log : console.warn
+  write(JSON.stringify(entry))
+}
+const MISSING_KEY_MESSAGE = 'No AI provider key is configured. Add GEMINI_API_KEY (https://aistudio.google.com/apikey) or OPENROUTER_API_KEY (https://openrouter.ai/keys) to projects/HACKVERSE-frontend/.env.server and restart the API server.'
 
-if (!payTo) throw new Error('X402_PAY_TO_ADDRESS is required.')
+class AgentError extends Error {
+  constructor(readonly status: number, message: string) { super(message) }
+}
 
 const agents: Record<string, AgentConfig> = {
   'resume-analyzer': { id: 'resume-analyzer', runtime: 'Gemini', price: '$0.001', minLength: 80, description: 'Resume Analyzer execution' },
@@ -64,14 +72,23 @@ app.use((request, response, next) => {
   next()
 })
 
-app.use(paymentMiddleware(Object.fromEntries(Object.values(agents).map((agent) => [
+app.post('/api/agents/:agentId/execute', (request, response, next) => {
+  const agent = agents[request.params.agentId]
+  if (!agent) return response.status(404).json({ error: 'Agent not found.' })
+  if (!payTo) return response.status(503).json({ error: 'Paid x402 execution is not configured on this server. Set X402_PAY_TO_ADDRESS in projects/HACKVERSE-frontend/.env.server and restart the API server.' })
+  if (combinedLength(normalizeInput(request.body)) < agent.minLength) return response.status(400).json({ error: 'Input is too short for this agent.' })
+  if (agent.runtime === 'Gemini' && !geminiApiKey && !openRouterApiKey) return response.status(503).json({ error: MISSING_KEY_MESSAGE })
+  return next()
+})
+
+if (payTo) app.use(paymentMiddleware(Object.fromEntries(Object.values(agents).map((agent) => [
   `POST /api/agents/${agent.id}/execute`,
   {
     accepts: [{
       scheme: 'exact',
       price: agent.price,
       network: ALGORAND_TESTNET_X402_NETWORK,
-      payTo,
+      payTo: payTo!,
       extra: { asset: USDC_TESTNET_ASA_ID },
     }],
     description: `AgentVerse ${agent.description}`,
@@ -125,20 +142,6 @@ function combinedLength(input: Record<string, string>) {
   return Object.values(input).join(' ').trim().length
 }
 
-function fallbackOutput(agentId: string, input: Record<string, string>): { summary: string; output: AgentOutput } {
-  const text = Object.values(input).join(' ').replace(/\s+/g, ' ').slice(0, 260)
-  const base = `Processed ${text.length} characters for ${agentId}.`
-  return {
-    summary: `${base} Live provider was unavailable, so AgentVerse returned a structured fallback.`,
-    output: {
-      Status: 'Fallback completed',
-      Summary: base,
-      'Key Observations': ['Input passed validation.', 'Payment was verified before execution.', 'The live runtime can be retried without losing the receipt.'],
-      Recommendations: ['Retry once provider quota is available.', 'Keep inputs focused for stronger results.'],
-    },
-  }
-}
-
 function promptFor(agentId: string, input: Record<string, string>) {
   const payload = JSON.stringify(input, null, 2)
   return `You are AgentVerse ${agentId}. Return only a valid JSON object: no Markdown fences, commentary, or prose outside JSON. Use short descriptive keys and string arrays where useful. Input:\n${payload}`
@@ -184,7 +187,7 @@ async function runGemini(agentId: string, input: Record<string, string>) {
 }
 
 async function runOpenRouter(agentId: string, input: Record<string, string>) {
-  if (!openRouterApiKey) return { ...fallbackOutput(agentId, input), fallback: true }
+  if (!openRouterApiKey) throw new AgentError(geminiApiKey ? 502 : 503, geminiApiKey ? 'Gemini could not complete this run. You were not charged; please retry.' : MISSING_KEY_MESSAGE)
   try {
     const response = await retry(() => withTimeout(fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
@@ -208,8 +211,8 @@ async function runOpenRouter(agentId: string, input: Record<string, string>) {
       provider: 'OpenRouter' as const,
     }
   } catch (error) {
-    log({ level: 'warn', event: 'openrouter_fallback', agentId, message: error instanceof Error ? error.message : 'unknown' })
-    return { ...fallbackOutput(agentId, input), fallback: true, provider: 'Gemini' as const }
+    log({ level: 'warn', event: 'openrouter_failed', agentId, message: error instanceof Error ? error.message : 'unknown' })
+    throw new AgentError(502, 'The AI provider could not complete this run. You were not charged; please retry.')
   }
 }
 
@@ -217,12 +220,12 @@ async function runPython(agentId: string, input: Record<string, string>) {
   const runner = join(__dirname, 'python_agents.py')
   const payload = JSON.stringify({ agentId, input })
   const pythonCandidates = [process.env.PYTHON_BIN, 'py', 'python3', 'python'].filter(Boolean) as string[]
-  return await withTimeout(new Promise<{ summary: string; output: AgentOutput; fallback: boolean }>((resolve) => {
+  return await withTimeout(new Promise<{ summary: string; output: AgentOutput; fallback: boolean }>((resolve, reject) => {
     const tryCandidate = (index: number) => {
       const command = pythonCandidates[index]
       if (!command) {
         log({ level: 'warn', event: 'python_unavailable', agentId })
-        resolve({ ...fallbackOutput(agentId, input), fallback: true })
+        reject(new AgentError(503, 'Python was not found on the API server. Install Python 3 or set PYTHON_BIN in .env.server.'))
         return
       }
       const child = spawn(command, [runner], { stdio: ['pipe', 'pipe', 'pipe'] })
@@ -233,10 +236,10 @@ async function runPython(agentId: string, input: Record<string, string>) {
       child.on('error', () => tryCandidate(index + 1))
       child.on('close', (code) => {
         if (code === 0) {
-          try { resolve({ ...JSON.parse(stdout), fallback: false }) } catch { resolve({ ...fallbackOutput(agentId, input), fallback: true }) }
+          try { resolve({ ...JSON.parse(stdout), fallback: false }) } catch { reject(new AgentError(502, 'The Python agent returned invalid output. You were not charged; please retry.')) }
         } else {
-          log({ level: 'warn', event: 'python_fallback', agentId, code, stderr: stderr.slice(0, 200) })
-          resolve({ ...fallbackOutput(agentId, input), fallback: true })
+          log({ level: 'warn', event: 'python_failed', agentId, code, stderr: stderr.slice(0, 200) })
+          reject(new AgentError(502, 'The Python agent failed. You were not charged; please retry.'))
         }
       })
       child.stdin.end(payload)
@@ -263,7 +266,8 @@ app.post('/api/agents/:agentId/execute', async (request, response, next) => {
 app.use((error: unknown, _request: express.Request, response: express.Response, _next: express.NextFunction) => {
   const message = error instanceof Error ? error.message : 'The paid agent execution could not be completed.'
   log({ level: 'error', event: 'agent_execution_failed', message, stack: error instanceof Error ? error.stack : undefined })
-  response.status(500).json({ error: 'The paid agent execution could not be completed. Please retry.' })
+  if (error instanceof AgentError) return response.status(error.status).json({ error: error.message })
+  return response.status(500).json({ error: 'The paid agent execution could not be completed. You were not charged; please retry.' })
 })
 
-app.listen(port)
+app.listen(port, () => log({ level: 'info', event: 'api_ready', port, x402: Boolean(payTo), gemini: Boolean(geminiApiKey), openrouter: Boolean(openRouterApiKey) }))

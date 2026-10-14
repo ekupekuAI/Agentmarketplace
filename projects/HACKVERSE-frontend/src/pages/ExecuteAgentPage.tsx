@@ -111,8 +111,13 @@ export function ExecuteAgentPage({ agentId }: { agentId: string }) {
       setRunStage('recording')
       let receipt: ExecutionChainReceipt | undefined
       if (canUseTestNet) {
-        const resultHash = await hashExecutionSummary(JSON.stringify({ summary: completed.summary, output: completed.output }))
-        receipt = await recordExecutionOnChain({ agentId, executionId: completed.id, resultHash, sender: activeAddress!, signer: transactionSigner })
+        try {
+          const resultHash = await hashExecutionSummary(JSON.stringify({ summary: completed.summary, output: completed.output }))
+          receipt = await recordExecutionOnChain({ agentId, executionId: completed.id, resultHash, sender: activeAddress!, signer: transactionSigner })
+        } catch (caught) {
+          receipt = { appId: appId ?? 0, transactionId: '' }
+          setError(`Your paid result is below, but the on-chain receipt could not be recorded: ${caught instanceof Error ? caught.message : 'unknown error'}`)
+        }
       } else {
         receipt = { appId: appId ?? 0, transactionId: `local-receipt-${completed.id}` }
       }
@@ -122,7 +127,7 @@ export function ExecuteAgentPage({ agentId }: { agentId: string }) {
         network: canUseTestNet ? 'testnet' : 'local',
         applicationId: receipt.appId || undefined,
         paymentTransactionId: payment?.transactionId,
-        chainTransactionId: receipt.transactionId,
+        chainTransactionId: receipt.transactionId || undefined,
       }
       saveExecution(enriched)
       setPaymentReceipt(payment)
@@ -199,8 +204,8 @@ export function ExecuteAgentPage({ agentId }: { agentId: string }) {
         </form>
         <ExecutionTimeline logs={logs} isRunning={isRunning} />
       </div>
-      {(paymentReceipt || chainReceipt) && <section className="blockchain-receipt" aria-label="Execution receipt"><div><p className="eyebrow">EXECUTION RECEIPT</p><h2>Execution trail</h2><p>{canUseTestNet ? 'Paid runs keep a compact TestNet paper trail without putting full AI output on-chain.' : 'This browser-local receipt keeps history usable without external credentials.'}</p></div><dl>{activeAddress && <div><dt>Connected wallet</dt><dd>{activeAddress}</dd></div>}<div><dt>Network</dt><dd>{networkLabel}</dd></div>{appId && <div><dt>Application ID</dt><dd>{appId}</dd></div>}{paymentReceipt?.transactionId && <div><dt>Payment Tx</dt><dd>{canUseTestNet ? <a href={testNetExplorerTransaction(paymentReceipt.transactionId)} target="_blank" rel="noreferrer">{paymentReceipt.transactionId}</a> : paymentReceipt.transactionId}</dd></div>}{chainReceipt?.transactionId && <div><dt>Execution Tx</dt><dd>{canUseTestNet ? <a href={testNetExplorerTransaction(chainReceipt.transactionId)} target="_blank" rel="noreferrer">{chainReceipt.transactionId}</a> : chainReceipt.transactionId}</dd></div>}{canUseTestNet && appId && <div><dt>Explorer</dt><dd><a href={testNetExplorerApplication(appId)} target="_blank" rel="noreferrer">View application</a></dd></div>}</dl></section>}
-      {record?.output && <><div className="result-actions"><button type="button" onClick={copy}>Copy result</button><button type="button" onClick={download}>Download JSON</button><button type="button" onClick={share}>Share result</button></div><ResultPanel output={record.output} summary={record.summary ?? ''} /></>}
+      {settings.executionReceipts && (paymentReceipt || chainReceipt) && <section className="blockchain-receipt" aria-label="Execution receipt"><div><p className="eyebrow">EXECUTION RECEIPT</p><h2>Execution trail</h2><p>{canUseTestNet ? 'Paid runs keep a compact TestNet paper trail without putting full AI output on-chain.' : 'This browser-local receipt keeps history usable without external credentials.'}</p></div><dl>{activeAddress && <div><dt>Connected wallet</dt><dd>{activeAddress}</dd></div>}<div><dt>Network</dt><dd>{networkLabel}</dd></div>{appId && <div><dt>Application ID</dt><dd>{appId}</dd></div>}{paymentReceipt?.transactionId && <div><dt>Payment Tx</dt><dd>{canUseTestNet ? <a href={testNetExplorerTransaction(paymentReceipt.transactionId)} target="_blank" rel="noreferrer">{paymentReceipt.transactionId}</a> : paymentReceipt.transactionId}</dd></div>}{chainReceipt?.transactionId && <div><dt>Execution Tx</dt><dd>{canUseTestNet ? <a href={testNetExplorerTransaction(chainReceipt.transactionId)} target="_blank" rel="noreferrer">{chainReceipt.transactionId}</a> : chainReceipt.transactionId}</dd></div>}{canUseTestNet && appId && <div><dt>Explorer</dt><dd><a href={testNetExplorerApplication(appId)} target="_blank" rel="noreferrer">View application</a></dd></div>}</dl></section>}
+      {record?.output && <><div className="result-actions"><button type="button" onClick={copy}>Copy result</button>{settings.resultDownloads && <button type="button" onClick={download}>Download JSON</button>}<button type="button" onClick={share}>Share result</button></div><ResultPanel output={record.output} summary={record.summary ?? ''} /></>}
     </section>
   )
 }

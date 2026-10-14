@@ -137,6 +137,18 @@ npm install
 npm run dev
 ```
 
+No `.env` is required: the frontend defaults to Algorand TestNet via the public AlgoNode endpoints.
+
+# ▶ Run the AI / x402 API server
+
+```bash
+cd projects/HACKVERSE-frontend
+cp .env.server.template .env.server   # then fill in the values below
+npm run dev:api                       # listens on PORT (default 4021); Vite proxies /api to it
+```
+
+The server starts even with nothing configured. Missing pieces produce clear errors instead of placeholder results: a missing AI key or x402 address returns a message saying exactly what to add, **before** any payment is requested. A run that fails is never settled, so the user is not charged.
+
 Build production
 
 ```bash
@@ -164,19 +176,44 @@ Application ID:
 
 # 🔑 Environment Variables
 
-Frontend
+Templates: `projects/HACKVERSE-frontend/.env.template` (frontend) and `.env.server.template` (API server). Copy them to `.env` / `.env.server`; both are git-ignored.
 
-```env
-VITE_AGENTVERSE_APP_ID=768352288
-```
+| Variable | Where | Required | Purpose / where to get it |
+| --- | --- | --- | --- |
+| `VITE_ALGOD_SERVER`, `VITE_ALGOD_NETWORK`, … | `.env` | No | Algod/indexer endpoints. Default: AlgoNode TestNet. |
+| `VITE_AGENTVERSE_APP_ID` | `.env` | No | AgentVerse app id. Default `768352288` (TestNet). |
+| `GEMINI_API_KEY` | `.env.server` | For LLM agents* | https://aistudio.google.com/apikey |
+| `GEMINI_MODEL` | `.env.server` | No | Default `gemini-2.5-flash`. |
+| `OPENROUTER_API_KEY` | `.env.server` | For LLM agents* | Fallback provider, https://openrouter.ai/keys |
+| `OPENROUTER_MODEL` | `.env.server` | No | Default `openrouter/free`. |
+| `X402_PAY_TO_ADDRESS` | `.env.server` | For paid runs | Your TestNet address, opted into TestNet USDC (ASA 10458941). |
+| `X402_PAYER_ADDRESS` | `.env.server` | No | Only used by `npm run check:x402`. |
+| `X402_FACILITATOR_URL` | `.env.server` | No | Default `https://facilitator.goplausible.xyz`. |
+| `PYTHON_BIN` | `.env.server` | No | Python 3 for the document/CSV/OCR agents (auto-detected). |
+| `PORT`, `WEB_ORIGIN` | `.env.server` | No | API port (default 4021) and CORS origin. |
+| `API_PROXY_TARGET` | shell | No | Point the Vite `/api` proxy at a different API port. |
 
-Backend (Future AI Integration)
-
-```env
-GEMINI_API_KEY=YOUR_API_KEY
-```
+\* At least one of `GEMINI_API_KEY` / `OPENROUTER_API_KEY` is needed for Resume Analyzer, Research Assistant, Interview Coach, Code Reviewer and Business Validator.
 
 Never commit secrets, mnemonics, or private keys.
+
+---
+
+# 🛠 What changed in this version
+
+| Before | After |
+| --- | --- |
+| Blank page on a fresh clone (no `.env` → wallet manager threw) | Defaults to AlgoNode TestNet; `.env.template` now defaults to TestNet |
+| API server crashed on start without `X402_PAY_TO_ADDRESS`; `npm run dev:api` aborted without `.env.server` | Starts anyway and explains what to configure |
+| Paid runs with no AI key / failed provider returned a placeholder "Fallback completed" result | Clear "add your API key" error before payment; provider failures are errors, so x402 does not settle |
+| Prices shown as `0.8 ALGO` etc. while x402 actually charged `$0.001` USDC | Prices show `0.001 USDC` |
+| Explorer links pointed to AlgoExplorer (shut down) | Links go to Lora (`lora.algokit.io`) |
+| A failed on-chain receipt discarded the result the user had just paid for | Result is kept; the receipt error is shown |
+| Browser fallback crashed for every agent except Research Assistant | Fixed |
+| CSV agent showed `[object Object]` for missing values / numeric summary | Readable lists |
+| Connect button was Pera-only (LocalNet/KMD and the wallet setting did nothing) | Uses the wallet chosen in Settings, falls back to the configured one |
+| Settings toggles (receipts, downloads, verification badges, high-contrast theme) had no effect | Wired up |
+| Default Gemini model `gemini-2.0-flash` (retired) | `gemini-2.5-flash` |
 
 ---
 

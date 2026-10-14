@@ -1,7 +1,7 @@
 import type { AgentResult, AiExecutionRequest, AiExecutionResult, AiProvider } from './types'
 
 const sleep = (milliseconds: number) => new Promise<void>((resolve) => window.setTimeout(resolve, milliseconds))
-const firstWords = (value: string, count = 10) => value.trim().split(/\s+/).slice(0, count).join(' ')
+const firstWords = (value: string | undefined, count = 10) => (value ?? '').trim().split(/\s+/).slice(0, count).join(' ')
 
 function resultFor(request: AiExecutionRequest): AiExecutionResult {
   const input = request.input

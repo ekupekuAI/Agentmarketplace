@@ -610,3 +610,8 @@
     display: grid;
   }
 }
+
+/* High-contrast theme (Settings → Theme). */
+.theme-contrast .app-shell { background: #000; }
+.theme-contrast :is(p, small, time, label, dd, dt, em, .eyebrow, .card-meta span) { color: #fff !important; }
+.theme-contrast :is(.agent-card, .execution-form, .execution-timeline, .result-panel, .settings-panel, .creator-panel, .profile-panel, .history-table, .search-box, textarea, input, select) { background: #000 !important; border-color: #fff !important; }

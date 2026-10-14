@@ -46,8 +46,8 @@
   "scripts": {
     "generate:app-clients": "algokit project link --all",
     "dev": "vite",
-    "dev:api": "node --env-file=.env.server --loader ts-node/esm server/index.ts",
-    "check:x402": "node --env-file=.env.server --loader ts-node/esm server/check_x402_readiness.ts",
+    "dev:api": "node --loader ts-node/esm server/index.ts",
+    "check:x402": "node --loader ts-node/esm server/check_x402_readiness.ts",
     "typecheck": "tsc && tsc -p server/tsconfig.json",
     "build": "tsc && vite build",
     "preview": "vite preview"

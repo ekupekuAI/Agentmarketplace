@@ -7,5 +7,6 @@ export function getAgentVerseAppId(): number {
   return appId
 }
 
-export const testNetExplorerTransaction = (transactionId: string) => `https://testnet.algoexplorer.io/tx/${transactionId}`
-export const testNetExplorerApplication = (appId: number) => `https://testnet.algoexplorer.io/application/${appId}`
+// AlgoExplorer shut down in 2023; Lora is the Algorand Foundation's maintained explorer.
+export const testNetExplorerTransaction = (transactionId: string) => `https://lora.algokit.io/testnet/transaction/${transactionId}`
+export const testNetExplorerApplication = (appId: number) => `https://lora.algokit.io/testnet/application/${appId}`
